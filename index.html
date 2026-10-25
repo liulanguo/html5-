@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f5ed">
+  <title>拾光农场 · 种植小游戏</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="game.js" defer></script>
+</head>
+<body>
+  <div class="page">
+    <header class="app-bar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">🌿</span>
+        <div class="brand-copy"><strong>拾光农场</strong><span>MINI FARM · V3</span></div>
+      </div>
+      <nav class="primary-nav" aria-label="游戏主导航">
+        <button type="button" class="nav-button is-active" data-view="farm"><span aria-hidden="true">🌾</span> 农田</button>
+        <button type="button" class="nav-button" data-view="warehouse"><span aria-hidden="true">🧺</span> 仓库 <span id="nav-harvest-badge" class="nav-count">0</span></button>
+        <button type="button" class="nav-button" data-view="guide"><span aria-hidden="true">📖</span> 玩法指南</button>
+      </nav>
+      <div class="resource-bar" aria-label="游戏资源">
+        <div class="resource-chip" title="当前金币">
+          <span aria-hidden="true">🪙</span><strong id="coins">100</strong>
+        </div>
+        <div class="resource-chip" title="当前种子总数量">
+          <span aria-hidden="true">🌰</span><strong id="seed-total">3</strong>
+        </div>
+        <button type="button" class="resource-chip resource-button" data-view="warehouse" title="查看未出售收获">
+          <span aria-hidden="true">🧺</span><strong id="harvest-total">0</strong>
+        </button>
+      </div>
+    </header>
+
+    <section class="intro-strip" aria-label="农场简介与今日限定种子">
+      <div class="intro-copy">
+        <span class="eyebrow">YOUR LITTLE GREEN CORNER</span>
+        <h1>种下一颗小小的期待 <span aria-hidden="true">🌱</span></h1>
+        <p>悉心照料每一株植物，让好收成自然发生。</p>
+      </div>
+      <div class="today-special">
+        <span class="today-icon" id="daily-icon" aria-hidden="true">✨</span>
+        <div class="today-details">
+          <span><strong id="today-label">星期一</strong><span class="date-inline" id="today-date"></span> · 今日限定</span>
+          <strong id="daily-name">今日神奇种子</strong>
+          <small id="daily-description">每天都有不同的特殊作物</small>
+        </div>
+      </div>
+    </section>
+
+    <!-- 主界面：按桌面宽度约 1 : 6 : 2 分配左侧储水、中央田地、右侧商店 -->
+    <main id="view-farm" class="view">
+      <div class="farm-layout">
+        <aside class="water-rail" aria-label="储水罐与小游戏入口">
+          <div class="rail-heading"><span class="rail-symbol">💧</span><strong>储水罐</strong></div>
+          <div class="tank-illustration" aria-label="储水罐，共九格刻度">
+            <div class="tank-cap"></div>
+            <div class="tank-glass">
+              <div id="water-fill" class="tank-water" style="height:22.22%"></div>
+              <div class="tank-shimmer"></div>
+              <div class="tank-marks" aria-hidden="true">
+                <span>9</span><span>8</span><span>7</span>
+                <span>6</span><span>5</span><span>4</span>
+                <span>3</span><span>2</span><span>1</span>
+              </div>
+            </div>
+            <div class="tank-base"></div>
+          </div>
+          <div class="water-reading">
+            <strong id="water-count">2</strong><span> / 9</span>
+            <small>当前水量</small>
+          </div>
+          <p class="water-description" id="water-next">每天补充 1 滴水</p>
+          <div class="rail-separator"></div>
+          <p class="water-tip">🐹 玩小游戏，还能收集更多水滴哦！</p>
+          <button type="button" class="water-game-button" data-view="mole">打地鼠取水 <span aria-hidden="true">↗</span></button>
+        </aside>
+
+        <section class="farm-center" aria-labelledby="farm-heading">
+          <div class="field-frame">
+            <div class="field-heading">
+              <div>
+                <span class="eyebrow">MY LITTLE GARDEN</span>
+                <h2 id="farm-heading">我的小农田 <span class="field-count">9 块土地</span></h2>
+              </div>
+              <span class="field-hint"><span class="live-dot"></span> 作物持续生长中</span>
+            </div>
+            <div class="field-scenery" aria-hidden="true">
+              <span class="scenery-sun">☀️</span>
+              <span class="scenery-cloud">☁️</span>
+              <span class="scenery-tree">🌳</span>
+              <span class="scenery-flower">🌼</span>
+            </div>
+            <div class="field-bed">
+              <div id="farm" class="farm-grid" aria-label="可交互的九宫格农田"></div>
+            </div>
+            <div class="field-bottom">
+              <span>🌾 点击空地播种或施肥，点击生长中的作物浇水</span>
+              <span>成熟后点击即可收获</span>
+            </div>
+          </div>
+        </section>
+
+        <aside class="market-sidebar" id="shop-section" aria-label="种子袋与种子商店">
+          <div class="market-header">
+            <div><span class="eyebrow">SEED MARKET</span><h2><span class="market-title-icon" aria-hidden="true">
+                  <svg class="market-title-svg" viewBox="0 0 32 32"
+                       xmlns="http://www.w3.org/2000/svg" focusable="false">
+                    <path d="M5 13.5 16 4l11 9.5V28H5z"
+                          fill="#f6ddb2" stroke="#4c795d" stroke-width="1.6" stroke-linejoin="round"/>
+                    <path d="M3.7 14.2 16 3.6l12.3 10.6"
+                          fill="none" stroke="#a8754d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M7.3 14.5h17.4l2 5H5.3z"
+                          fill="#d8a46c" stroke="#a8754d" stroke-width="1.3" stroke-linejoin="round"/>
+                    <path d="M5.3 19.5h21.4"
+                          stroke="#fff3d4" stroke-width="2.1"/>
+                    <path d="M12 28v-7h8v7"
+                          fill="#92bca1" stroke="#4c795d" stroke-width="1.5"/>
+                    <path d="M23 9l2 1.8" stroke="#f9edcc" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </span><span>种子小铺</span></h2></div>
+            <div class="seed-pouch">
+              <button type="button" class="seed-pouch-trigger" id="seed-bag-trigger"
+                      aria-expanded="false" aria-controls="seed-bag-popover"
+                      aria-label="种子袋，悬停或点击查看各类种子数量"
+                      title="种子袋 · 悬停或点击查看库存">
+                <svg class="seed-pouch-icon" viewBox="0 0 64 64"
+                     xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                  <path d="M20 12h24l-5 14c7 4 12 13 12 22 0 8-8 12-19 12S13 56 13 48c0-9 5-18 12-22z"
+                        fill="#e3bc80" stroke="#986e43" stroke-width="2.5" stroke-linejoin="round"/>
+                  <path d="M20 12h24l-5 13H25z"
+                        fill="#f6ddac" stroke="#986e43" stroke-width="2.5" stroke-linejoin="round"/>
+                  <path d="M23 27c5 2 13 2 18 0"
+                        fill="none" stroke="#b58a53" stroke-width="2.6" stroke-linecap="round"/>
+                  <path d="M31 48V35" fill="none" stroke="#427d56" stroke-width="2.5" stroke-linecap="round"/>
+                  <path d="M31 42c-8 0-11-5-10-10 7 0 10 3 10 10z"
+                        fill="#6da876" stroke="#427d56" stroke-width="1.6" stroke-linejoin="round"/>
+                  <path d="M31 38c1-7 5-10 12-10 0 7-5 11-12 10z"
+                        fill="#83bb80" stroke="#427d56" stroke-width="1.6" stroke-linejoin="round"/>
+                  <path d="M20 47c2 7 20 9 25 0"
+                        fill="none" stroke="#f9e2ad" stroke-width="2.2" stroke-linecap="round" opacity=".55"/>
+                </svg>
+              </button>
+              <div id="seed-bag-popover" class="seed-bag-popover" role="group" aria-label="种子库存表格">
+                <div class="pouch-popover-title">🌱 我的种子袋</div>
+                <div id="seed-bag"></div>
+              </div>
+            </div>
+          </div>
+          <p class="market-note">6 种常驻种子 · 每天 1 种限定</p>
+          <div id="shop-list" class="shop-list"></div>
+          <div class="market-footer">✨ 限定种子买下后，可以在任何一天种植。</div>
+        </aside>
+      </div>
+    </main>
+
+    <!-- 仓库：独立页面，但保留顶部导航与资源栏 -->
+    <main id="view-warehouse" class="view" hidden>
+      <section class="subpage-header warehouse-header">
+        <div class="subpage-icon" aria-hidden="true">🧺</div>
+        <div class="subpage-main">
+          <span class="eyebrow">HARVEST STORAGE</span>
+          <h2>丰收仓库</h2>
+          <p>每一份收获都值得收藏一会儿。查看重量、比较售价，再决定何时卖出。</p>
+        </div>
+        <div class="warehouse-value">
+          <span>当前未出售总价值</span>
+          <strong id="harvest-worth">0 金币</strong>
+        </div>
+      </section>
+      <section class="inventory-panel">
+        <div class="inventory-heading">
+          <div>
+            <span class="eyebrow">YOUR HARVESTS</span>
+            <h3>待出售作物</h3>
+          </div>
+          <div class="action-row">
+            <button type="button" class="button button-soft" data-view="farm">← 返回农田</button>
+            <button type="button" id="sell-all" class="button button-primary">🪙 一键出售全部</button>
+          </div>
+        </div>
+        <div id="harvest-summary" class="harvest-summary"></div>
+        <div id="harvest-list" class="harvest-list"></div>
+        <div class="warehouse-bottom-note">💡 出售时才会增加金币。施肥能提高收获大重量作物的概率，影响最终价格。</div>
+      </section>
+      <section class="warehouse-extras" aria-label="仓库记录与经营提示">
+        <div class="warehouse-journal">
+          <span class="eyebrow">FARM JOURNAL</span>
+          <h3>📒 我的经营记录</h3>
+          <p>播种、照料、收获，每一步都算数。</p>
+          <div class="journal-stats">
+            <div><strong id="warehouse-type-count">0</strong><span>当前库存种类</span></div>
+            <div><strong id="warehouse-total-harvested">0</strong><span>历史收获数量</span></div>
+            <div><strong id="warehouse-heaviest">—</strong><span>现存最重作物</span></div>
+          </div>
+        </div>
+        <div class="warehouse-advice">
+          <span class="eyebrow">A LITTLE FARMING WISDOM</span>
+          <h3>🌾 丰收备忘录</h3>
+          <div><span>⚖️</span> 不同作物拥有不同重量区间，重一些的收成往往能卖出更好的价钱。</div>
+          <div><span>✨</span> 星期限定种子带有独特特效，收获后仍会标记在仓库里。</div>
+          <div><span>🪙</span> 暂时不想卖？作物可以一直保存在仓库，随时回来出售。</div>
+        </div>
+      </section>
+    </main>
+
+    <!-- 玩法指南：独立游戏内页面，不额外开网页 -->
+    <main id="view-guide" class="view" hidden>
+      <section class="subpage-header guide-header">
+        <div class="subpage-icon" aria-hidden="true">📖</div>
+        <div class="subpage-main">
+          <span class="eyebrow">THE FARM HANDBOOK</span>
+          <h2>农场生活指南</h2>
+          <p>从第一颗种子，到丰收与收集，一页读懂全部玩法。</p>
+        </div>
+        <button type="button" class="button button-primary" data-view="farm">返回我的农田 →</button>
+      </section>
+      <section class="guide-grid">
+        <article class="guide-card">
+          <div class="guide-card-icon">🌱</div><h3>01 · 播种与收获</h3>
+          <p>在右侧商店购买种子，点击农田空地选择要种的作物。植物会按真实经过的时间成长，成熟后点击土地收获；收获进入仓库，不会自动卖钱。</p>
+          <span class="guide-card-label">商店 → 播种 → 成熟 → 仓库 → 出售</span>
+        </article>
+        <article class="guide-card">
+          <div class="guide-card-icon">🌾</div><h3>02 · 施肥，让收获更重</h3>
+          <p>点击空土地花费 <b>12 金币</b>施肥，肥效作用于接下来种植的那一株。施肥后更容易收获接近重量上限的大作物，收获后该块土地的肥效清零。</p>
+          <code>普通：t = U²　｜　施肥：t = √U</code>
+        </article>
+        <article class="guide-card">
+          <div class="guide-card-icon">💧</div><h3>03 · 浇水与成长</h3>
+          <p>每株作物须先经过一定生长时间才能浇水，之后也要等待浇水冷却。每次消耗 <b>1 滴水</b>，额外增加相当于作物原始成长时间 <b>20%</b> 的成长进度，每株最多 2 次。</p>
+          <span class="guide-card-label">水量 2 滴开局 · 上限 9 滴</span>
+        </article>
+        <article class="guide-card">
+          <div class="guide-card-icon">⚖️</div><h3>04 · 重量与售价</h3>
+          <p>每种作物有不同的重量范围。收获时随机确定重量，并由重量在范围中的比例计算额外收益。最终售价最低接近基础价，最高约为基础价的 <b>2.2 倍</b>。</p>
+          <code>售价 = 基础价 + round(基础价 × 1.2 × t)</code>
+        </article>
+        <article class="guide-card">
+          <div class="guide-card-icon">🐹</div><h3>05 · 打地鼠收集水滴</h3>
+          <p>每天经过一个本地日历日会自动恢复 <b>1 滴水</b>。也可以进入左侧储水罐下面的打地鼠游戏：一局 20 秒，每击中 4 只地鼠奖励 1 滴水，单局最多 3 滴。</p>
+          <span class="guide-card-label">小游戏期间作物仍会正常生长</span>
+        </article>
+        <article class="guide-card">
+          <div class="guide-card-icon">✨</div><h3>06 · 星期限定作物</h3>
+          <p>每天会有一种特殊种子，只在当天的商店售卖。它们拥有独特的闪光、火焰、星光或彩虹特效。已经购买的限定种子，可以存到其他日期再种。</p>
+          <span class="guide-card-label">7 天 · 7 种限定 · 7 种不同特效</span>
+        </article>
+      </section>
+      <section class="weekly-panel">
+        <div class="weekly-header">
+          <div><span class="eyebrow">A WEEK OF LITTLE WONDERS</span><h3>每周神奇种子一览</h3></div>
+          <span>按设备本地星期自动轮换</span>
+        </div>
+        <div class="weekly-grid">
+          <div><span>周一</span><strong>🌿 露珠薄荷</strong><small>露珠漂浮</small></div>
+          <div><span>周二</span><strong>🌶️ 焰心辣椒</strong><small>火焰跳动</small></div>
+          <div><span>周三</span><strong>🫐 星辉蓝莓</strong><small>星光闪烁</small></div>
+          <div><span>周四</span><strong>🌽 雷鸣甜玉米</strong><small>闪电效果</small></div>
+          <div><span>周五</span><strong>🥕 彩虹萝卜</strong><small>七彩变色</small></div>
+          <div><span>周六</span><strong>🍆 月影茄子</strong><small>月光漂浮</small></div>
+          <div><span>周日</span><strong>🌻 向阳金葵</strong><small>金光旋转</small></div>
+        </div>
+        <p class="guide-footnote">💾 游戏自动保存在本浏览器的 localStorage 中。切换设备或清除浏览器数据可能导致存档丢失；时间与星期以设备本地日期为准。</p>
+      </section>
+    </main>
+
+    <!-- 打地鼠：由左侧储水罐入口进入 -->
+    <main id="view-mole" class="view" hidden>
+      <section class="subpage-header mole-header">
+        <div class="subpage-icon" aria-hidden="true">🐹</div>
+        <div class="subpage-main">
+          <span class="eyebrow">WATER QUEST</span>
+          <h2>打地鼠 · 水滴挑战</h2>
+          <p>20 秒内找到冒头的地鼠，连续命中积攒水滴！返回农田后植物已经悄悄长大啦。</p>
+        </div>
+        <div class="mole-water-tag">💧 当前 <strong id="mole-water">2 / 9</strong></div>
+      </section>
+      <section class="mole-panel">
+        <div class="mole-play-area">
+          <div class="mole-stats">
+            <div><small>剩余时间</small><strong id="mole-time">20.0s</strong></div>
+            <div><small>击中数量</small><strong id="mole-score">0</strong></div>
+            <div><small>本局可得</small><strong id="mole-reward">0 💧</strong></div>
+            <div><small>历史最佳</small><strong id="mole-best">0</strong></div>
+          </div>
+          <div id="mole-grid" class="mole-grid" aria-label="打地鼠九宫格"></div>
+          <div class="mole-footer">
+            <button type="button" id="mole-start" class="button button-primary">开始挑战</button>
+            <button type="button" class="button button-soft" data-view="farm">← 返回农田</button>
+          </div>
+          <p id="mole-status" class="mole-status" role="status">准备好了吗？点击开始挑战！</p>
+        </div>
+        <aside class="mole-tips">
+          <span class="eyebrow">HOW TO PLAY</span>
+          <h3>收集水滴的秘诀</h3>
+          <div><span>⏱️</span><p><b>每局 20 秒</b><small>抓紧时间！地鼠会不断换位置。</small></p></div>
+          <div><span>🎯</span><p><b>4 次命中换 1 滴水</b><small>单局最多获得 3 滴水。</small></p></div>
+          <div><span>🫙</span><p><b>储水上限 9 滴</b><small>多余奖励不会超过容量。</small></p></div>
+          <div><span>🌱</span><p><b>农田持续成长</b><small>小游戏与种植使用同一个时间系统。</small></p></div>
+        </aside>
+      </section>
+    </main>
+
+    <!-- 点土地后打开操作浮层，不必滚动到农田下方找按钮 -->
+    <div id="plot-overlay" class="plot-overlay" hidden>
+      <div class="plot-dialog" role="dialog" aria-modal="true" aria-labelledby="plot-title">
+        <div class="plot-dialog-heading">
+          <div><span class="eyebrow">FIELD ACTIONS</span><h2 id="plot-title">土地操作台</h2></div>
+          <button type="button" id="close-plot" class="icon-close" aria-label="关闭土地操作窗口">✕</button>
+        </div>
+        <div id="plot-details" class="plot-details"></div>
+      </div>
+    </div>
+
+    <div id="message" class="toast" role="status" aria-live="polite" aria-atomic="true">
+      🌼 欢迎来到农场！点击土地开始种植吧。
+    </div>
+
+    <footer class="footer">
+      <span>🌿 拾光农场 · 用每一次收获，装满温柔的日常</span>
+      <button type="button" id="reset-game" class="reset-button">重置游戏进度</button>
+    </footer>
+  </div>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"45c2bf8136a245cd97f1c2e9a96c0730","spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
